@@ -7,10 +7,7 @@ function App() {
   const divStyle = {
     width: "100%", 
     minHeight: "100vh",
-    // border: "1px solid blue",
     marginTop: "0px",
-    // marginBottom: "10px",
-    // marginLeft: "10px",
     padding: "20px",
     backgroundColor: "aliceblue",
   };
@@ -86,86 +83,71 @@ function App() {
     // "rkn.gov.ru",
   ]
   const arrBig = arr.concat(arr2)
-  const [serverStatus, setServerStatus] = useState([])
-  const [checked, setChecked] = useState(false)
-  // console.log (arrBig)
-  let b=[]
-  function check(arrBig,index, arrStatus) {
-    const options ={
+  const [RUWebsites, setRUWebsites] = useState(arrBig.map((site) => ({
+    status: false,
+    request: 0,
+    site
+  })))
+
+  console.log('RUWebsites', RUWebsites)
+  
+  async function check(arrBig, index) {
+    const options = {
       method: "GET",
       mode: "no-cors"
     }
-   // console.log(arrBig[index])
-    fetch("http://"+arrBig[index], options)
-    .then(res =>res.text())
-    .then(html =>{
-      // Convert the HTML string into a document object
+    try {
+      const request = await fetch("http://" + arrBig[index], options)
+      const html = await request.text()
       const parser = new DOMParser();
       const doc = parser.parseFromString(html, 'text/html');
-      //console.log("answer from server ",arrBig[index], doc)
-      if(doc){
-      arrStatus[index]={
-        site: arrBig[index],
-        status: true,
-        request: 0
+      if (doc) {
+        setRUWebsites(previousState => ({
+          ...previousState, [index]: {
+            site: arrBig[index],
+            status: true,
+            request: previousState[index]?.request + 1
+          }
+        }))
       }
-     // console.log("TRUE ", arrStatus)
+    } catch (e) {
+      setRUWebsites(previousState => ({
+        ...previousState, [index]: {
+          site: arrBig[index],
+          status: false,
+          request: previousState[index]?.request
+        }
+      }))
     }
-     
-    }).catch(e =>{
-      //console.log("error from server ", arrBig[index], e)
-      if(e)
-      {arrStatus[index]={
-        site: arrBig[index],
-        status: false,
-        request: 0
-      }
-
-      //console.log("FALSE ", arrStatus)
-    }
-
-    })
-    // console.log(" some info inside ", arrStatus)
-    //setServerStatus([...arrStatus])
-    setChecked(true)
-    return (arrStatus)
   }
 
-  const checkservers = ()=>{
-    setChecked(false)
-    let arrStatus=[]
-      for( let i=0; i<arrBig.length; i++){
-       b=check(arrBig,i,arrStatus)
-       
+  const checkservers = () => {
+    for (let i = 0; i < arrBig.length; i++) {
+      check(arrBig, i)
     }
-    setServerStatus(...[arrStatus])
-    console.log(" server status....", arrStatus, serverStatus, "checked? ", checked, "b? ",b)
-    return (arrStatus)
   }
 
-  //  useEffect(() =>{
-  //    let a=[]
-    // const fechtPooling = setInterval(() => {
-    //   checkservers()
-    //   //setServerStatus(...[a])
-    //    console.log("zzzzzzzzzzzzzzzzzzzzzzzzzzzz")
-    
-    //   return () => clearInterval(fechtPooling)
-    // }, 1000);
-  // },[])
-  console.log("server status  ",serverStatus)
+  useEffect(() => {
+    setInterval(() => {
+      checkservers()
+    }, 100);
+  }, [])
+
   return (
     <div className="App" style={divStyle}>
-      <button onClick={()=>checkservers()}>Check status</button>
+      <h1>РУССКИЙ ВОЕННЫЙ КОРАБЛЬ, ИДИ НА ХУЙ</h1>
+      {/* <button onClick={()=>checkservers()}>Check status</button> */}
       <div>
-          <span>Site name </span> <span>Status </span>
-          {/* {serverStatus.lengt>0 && */}
-            {serverStatus.map((x,i) =>(
-              <div key={i} className="d-flex">
-                <span>{x.site} </span> <span>{x.status ? <p>ON</p> : <p>OFF</p>} </span><span>{x.request} </span>
-              </div>
-            ))
-          }  
+        <div className='title'>
+         <b> <span>Site name </span>  <span> Status </span><span> Requests </span></b>
+        </div>
+        {/* {serverStatus.lengt>0 && */}
+        {arrBig.map((x, i) => (
+          <div key={i} className="d-flex">
+            <span>{RUWebsites[i]?.site} </span> <span>{RUWebsites[i].status ? <span style={{color:"red"}}>ON</span> : <span style={{color:"blue"}}>OFF</span>} </span><span>{RUWebsites[i]?.request} </span>
+          </div>
+        ))
+        }
       </div>
     </div>
   );

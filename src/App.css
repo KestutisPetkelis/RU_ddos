@@ -105,3 +105,11 @@ button{
   margin-left: 20px;
   margin-right: 20px;
 }
+span{
+  display:inline-block;
+  width: 200px;
+  text-align: left;
+}
+.title{
+  text-align: left;
+}
